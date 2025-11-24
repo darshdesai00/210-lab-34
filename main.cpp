@@ -4,7 +4,6 @@
 #include <queue>
 using namespace std;
 
-// New graph size after deleting 2 nodes and adding 6 new ones
 const int SIZE = 9;
 
 struct Edge {
@@ -17,39 +16,57 @@ class Graph {
 public:
     vector<vector<Pair>> adjList;
 
+    // Airport labels (same order as nodes 0–8)
+    vector<string> airportNames = {
+        "SFO - San Francisco (Check-In Terminal)",
+        "LAX - Los Angeles (Security Gate)",
+        "SEA - Seattle (Main Terminal)",
+        "DEN - Denver (Food Court)",
+        "PHX - Phoenix (Passenger Lounge)",
+        "DFW - Dallas (Shuttle Depot)",
+        "ORD - Chicago (Runway Access)",
+        "ATL - Atlanta (Baggage Claim)",
+        "JFK - New York (Parking Garage)"
+    };
+
     Graph(vector<Edge> const &edges) {
         adjList.resize(SIZE);
 
         for (auto &edge : edges) {
-            int src = edge.src;
-            int dest = edge.dest;
-            int weight = edge.weight;
-
-            adjList[src].push_back(make_pair(dest, weight));
-            adjList[dest].push_back(make_pair(src, weight));
+            adjList[edge.src].push_back({edge.dest, edge.weight});
+            adjList[edge.dest].push_back({edge.src, edge.weight});
         }
     }
 
-    void printGraph() {
-        cout << "Graph's adjacency list:\n";
-        for (int i = 0; i < adjList.size(); i++) {
-            cout << i << " --> ";
-            for (Pair v : adjList[i]) {
-                cout << "(" << v.first << ", " << v.second << ") ";
+    // ===============================
+    //       Airport Network Print
+    // ===============================
+    void printAirportNetwork() {
+        cout << "Airport Transportation Network:\n";
+        cout << "====================================\n\n";
+
+        for (int i = 0; i < SIZE; i++) {
+            cout << airportNames[i] << " connects to:\n";
+            for (auto &v : adjList[i]) {
+                cout << "  → " << airportNames[v.first]
+                     << " (Travel Time: " << v.second << " minutes)\n";
             }
             cout << endl;
         }
-        cout << endl;
     }
 
-    // DFS
+    // ===============================
+    //              DFS
+    // ===============================
     void DFS(int start) {
         vector<bool> visited(SIZE, false);
         stack<int> s;
 
         s.push(start);
 
-        cout << "DFS starting from vertex " << start << ":\n";
+        cout << "Airport Route Exploration (DFS) from " 
+             << airportNames[start] << ":\n";
+        cout << "=====================================\n";
 
         while (!s.empty()) {
             int v = s.top();
@@ -57,20 +74,29 @@ public:
 
             if (!visited[v]) {
                 visited[v] = true;
-                cout << v << " ";
 
-                // Push neighbors in reverse to match sample output
+                cout << "Inspecting: " << airportNames[v] << endl;
+
                 for (int i = adjList[v].size() - 1; i >= 0; i--) {
                     int neighbor = adjList[v][i].first;
-                    if (!visited[neighbor]) s.push(neighbor);
+                    int dist = adjList[v][i].second;
+
+                    if (!visited[neighbor]) {
+                        cout << "  → Possible next hop: " 
+                             << airportNames[neighbor]
+                             << " (" << dist << " minutes)\n";
+                        s.push(neighbor);
+                    }
                 }
+                cout << endl;
             }
         }
-
-        cout << "\n\n";
+        cout << endl;
     }
 
-    // BFS
+    // ===============================
+    //              BFS
+    // ===============================
     void BFS(int start) {
         vector<bool> visited(SIZE, false);
         queue<int> q;
@@ -78,28 +104,37 @@ public:
         visited[start] = true;
         q.push(start);
 
-        cout << "BFS starting from vertex " << start << ":\n";
+        cout << "Airport Layer-by-Layer Reachability (BFS) from "
+             << airportNames[start] << ":\n";
+        cout << "=============================================\n";
 
         while (!q.empty()) {
             int v = q.front();
             q.pop();
 
-            cout << v << " ";
+            cout << "Checking: " << airportNames[v] << endl;
 
             for (auto &neighbor : adjList[v]) {
-                if (!visited[neighbor.first]) {
-                    visited[neighbor.first] = true;
-                    q.push(neighbor.first);
+                int next = neighbor.first;
+                int dist = neighbor.second;
+
+                if (!visited[next]) {
+                    visited[next] = true;
+                    cout << "  → Reaching next area: " 
+                         << airportNames[next]
+                         << " (" << dist << " minutes)\n";
+                    q.push(next);
                 }
             }
+            cout << endl;
         }
-
-        cout << "\n\n";
+        cout << endl;
     }
 };
 
 int main() {
-    // Updated edges (matching Step 2 sample)
+
+    // Step 2 graph (unchanged)
     vector<Edge> edges = {
         {0, 1, 8}, {0, 2, 21},
         {1, 2, 6}, {1, 3, 5}, {1, 4, 4},
@@ -112,9 +147,9 @@ int main() {
 
     Graph graph(edges);
 
-    graph.printGraph();
-    graph.DFS(0);
-    graph.BFS(0);
+    graph.printAirportNetwork();
+    graph.DFS(0);  // Start DFS at San Francisco
+    graph.BFS(0);  // Start BFS at San Francisco
 
     return 0;
 }
