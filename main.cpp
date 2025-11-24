@@ -39,7 +39,7 @@ public:
     }
 
     // ---------------------------
-    // Step 3 Airport Network Print
+    // Step 3: Airport Network Print
     // ---------------------------
     void printAirportNetwork() {
         cout << "Airport Transportation Network:\n";
@@ -131,14 +131,14 @@ public:
     }
 
     // ---------------------------
-    // STEP 4: SHORTEST PATH (Dijkstra)
+    // Step 4: SHORTEST PATH (Dijkstra)
     // ---------------------------
     void shortestPath(int start) {
         vector<int> dist(SIZE, numeric_limits<int>::max());
         dist[start] = 0;
 
         priority_queue<Pair, vector<Pair>, greater<Pair>> pq;
-        pq.push({0, start});  // (distance, node)
+        pq.push({0, start});
 
         while (!pq.empty()) {
             int d = pq.top().first;
@@ -158,10 +158,52 @@ public:
             }
         }
 
-        // Assignment format output:
         cout << "Shortest path from node " << start << ":\n";
         for (int i = 0; i < SIZE; i++) {
             cout << start << " -> " << i << " : " << dist[i] << endl;
+        }
+        cout << endl;
+    }
+
+    // ---------------------------
+    // STEP 5: Minimum Spanning Tree (Prim’s Algorithm)
+    // ---------------------------
+    void minimumSpanningTree() {
+        vector<int> key(SIZE, numeric_limits<int>::max());
+        vector<int> parent(SIZE, -1);
+        vector<bool> inMST(SIZE, false);
+
+        key[0] = 0;  // start MST at node 0
+
+        for (int i = 0; i < SIZE - 1; i++) {
+            int minKey = numeric_limits<int>::max();
+            int u = -1;
+
+            for (int v = 0; v < SIZE; v++) {
+                if (!inMST[v] && key[v] < minKey) {
+                    minKey = key[v];
+                    u = v;
+                }
+            }
+
+            inMST[u] = true;
+
+            for (auto &edge : adjList[u]) {
+                int v = edge.first;
+                int weight = edge.second;
+
+                if (!inMST[v] && weight < key[v]) {
+                    key[v] = weight;
+                    parent[v] = u;
+                }
+            }
+        }
+
+        cout << "Minimum Spanning Tree edges:\n";
+        for (int i = 1; i < SIZE; i++) {
+            cout << "Edge from " << parent[i]
+                 << " to " << i
+                 << " with cost: " << key[i] << " units\n";
         }
         cout << endl;
     }
@@ -169,7 +211,6 @@ public:
 
 int main() {
 
-    // SAME GRAPH from Step 2 / Step 3
     vector<Edge> edges = {
         {0,1,8}, {0,2,21},
         {1,2,6}, {1,3,5}, {1,4,4},
@@ -185,9 +226,10 @@ int main() {
     graph.printAirportNetwork();
     graph.DFS(0);
     graph.BFS(0);
-
-    // ---- STEP 4 ----
     graph.shortestPath(0);
+
+    // ---- STEP 5 ----
+    graph.minimumSpanningTree();
 
     return 0;
 }
