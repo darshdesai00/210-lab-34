@@ -11,62 +11,50 @@ struct Edge {
     int src, dest, weight;
 };
 
-typedef pair<int, int> Pair;  // (neighbor, weight)
+typedef pair<int, int> Pair;
 
 class Graph {
 public:
     vector<vector<Pair>> adjList;
 
     vector<string> airportNames = {
-        "SFO - San Francisco (Check-In Terminal)",
-        "LAX - Los Angeles (Security Gate)",
-        "SEA - Seattle (Main Terminal)",
-        "DEN - Denver (Food Court)",
-        "PHX - Phoenix (Passenger Lounge)",
-        "DFW - Dallas (Shuttle Depot)",
-        "ORD - Chicago (Runway Access)",
-        "ATL - Atlanta (Baggage Claim)",
-        "JFK - New York (Parking Garage)"
+        "SFO - San Francisco",
+        "LAX - Los Angeles",
+        "SEA - Seattle",
+        "DEN - Denver",
+        "PHX - Phoenix",
+        "DFW - Dallas",
+        "ORD - Chicago",
+        "ATL - Atlanta",
+        "JFK - New York"
     };
 
     Graph(vector<Edge> const &edges) {
         adjList.resize(SIZE);
-
         for (auto &edge : edges) {
             adjList[edge.src].push_back({edge.dest, edge.weight});
             adjList[edge.dest].push_back({edge.src, edge.weight});
         }
     }
 
-    // ---------------------------
-    // Step 3: Airport Network Print
-    // ---------------------------
     void printAirportNetwork() {
-        cout << "Airport Transportation Network:\n";
-        cout << "====================================\n\n";
-
+        cout << "\nAirport Transportation Network:\n\n";
         for (int i = 0; i < SIZE; i++) {
             cout << airportNames[i] << " connects to:\n";
             for (auto &v : adjList[i]) {
                 cout << "  → " << airportNames[v.first]
-                     << " (Travel Time: " << v.second << " minutes)\n";
+                     << " (" << v.second << " minutes)\n";
             }
             cout << endl;
         }
     }
 
-    // ---------------------------
-    // DFS (unchanged)
-    // ---------------------------
     void DFS(int start) {
         vector<bool> visited(SIZE, false);
         stack<int> s;
-
         s.push(start);
 
-        cout << "Airport Route Exploration (DFS) from "
-             << airportNames[start] << ":\n";
-        cout << "=====================================\n";
+        cout << "\nDFS Route from " << airportNames[start] << ":\n\n";
 
         while (!s.empty()) {
             int v = s.top();
@@ -74,28 +62,17 @@ public:
 
             if (!visited[v]) {
                 visited[v] = true;
-                cout << "Inspecting: " << airportNames[v] << endl;
+                cout << airportNames[v] << endl;
 
                 for (int i = adjList[v].size() - 1; i >= 0; i--) {
-                    int neighbor = adjList[v][i].first;
-                    int dist = adjList[v][i].second;
-
-                    if (!visited[neighbor]) {
-                        cout << "  → Possible next hop: "
-                             << airportNames[neighbor]
-                             << " (" << dist << " minutes)\n";
-                        s.push(neighbor);
-                    }
+                    int nxt = adjList[v][i].first;
+                    if (!visited[nxt]) s.push(nxt);
                 }
-                cout << endl;
             }
         }
         cout << endl;
     }
 
-    // ---------------------------
-    // BFS (unchanged)
-    // ---------------------------
     void BFS(int start) {
         vector<bool> visited(SIZE, false);
         queue<int> q;
@@ -103,36 +80,25 @@ public:
         visited[start] = true;
         q.push(start);
 
-        cout << "Airport Layer-by-Layer Reachability (BFS) from "
-             << airportNames[start] << ":\n";
-        cout << "=============================================\n";
+        cout << "\nBFS Layers from " << airportNames[start] << ":\n\n";
 
         while (!q.empty()) {
             int v = q.front();
             q.pop();
 
-            cout << "Checking: " << airportNames[v] << endl;
+            cout << airportNames[v] << endl;
 
             for (auto &neighbor : adjList[v]) {
-                int next = neighbor.first;
-                int dist = neighbor.second;
-
-                if (!visited[next]) {
-                    visited[next] = true;
-                    cout << "  → Reaching next area: "
-                         << airportNames[next]
-                         << " (" << dist << " minutes)\n";
-                    q.push(next);
+                int nxt = neighbor.first;
+                if (!visited[nxt]) {
+                    visited[nxt] = true;
+                    q.push(nxt);
                 }
             }
-            cout << endl;
         }
         cout << endl;
     }
 
-    // ---------------------------
-    // Step 4: SHORTEST PATH (Dijkstra)
-    // ---------------------------
     void shortestPath(int start) {
         vector<int> dist(SIZE, numeric_limits<int>::max());
         dist[start] = 0;
@@ -148,32 +114,29 @@ public:
             if (d > dist[node]) continue;
 
             for (auto &edge : adjList[node]) {
-                int next = edge.first;
-                int weight = edge.second;
+                int nxt = edge.first;
+                int w = edge.second;
 
-                if (dist[node] + weight < dist[next]) {
-                    dist[next] = dist[node] + weight;
-                    pq.push({dist[next], next});
+                if (dist[node] + w < dist[nxt]) {
+                    dist[nxt] = dist[node] + w;
+                    pq.push({dist[nxt], nxt});
                 }
             }
         }
 
-        cout << "Shortest path from node " << start << ":\n";
+        cout << "\nShortest Paths from " << airportNames[start] << ":\n";
         for (int i = 0; i < SIZE; i++) {
             cout << start << " -> " << i << " : " << dist[i] << endl;
         }
         cout << endl;
     }
 
-    // ---------------------------
-    // STEP 5: Minimum Spanning Tree (Prim’s Algorithm)
-    // ---------------------------
     void minimumSpanningTree() {
         vector<int> key(SIZE, numeric_limits<int>::max());
         vector<int> parent(SIZE, -1);
         vector<bool> inMST(SIZE, false);
 
-        key[0] = 0;  // start MST at node 0
+        key[0] = 0;
 
         for (int i = 0; i < SIZE - 1; i++) {
             int minKey = numeric_limits<int>::max();
@@ -190,27 +153,25 @@ public:
 
             for (auto &edge : adjList[u]) {
                 int v = edge.first;
-                int weight = edge.second;
+                int w = edge.second;
 
-                if (!inMST[v] && weight < key[v]) {
-                    key[v] = weight;
+                if (!inMST[v] && w < key[v]) {
+                    key[v] = w;
                     parent[v] = u;
                 }
             }
         }
 
-        cout << "Minimum Spanning Tree edges:\n";
+        cout << "\nMinimum Spanning Tree:\n";
         for (int i = 1; i < SIZE; i++) {
-            cout << "Edge from " << parent[i]
-                 << " to " << i
-                 << " with cost: " << key[i] << " units\n";
+            cout << parent[i] << " - " << i
+                 << " (cost: " << key[i] << ")\n";
         }
         cout << endl;
     }
 };
 
 int main() {
-
     vector<Edge> edges = {
         {0,1,8}, {0,2,21},
         {1,2,6}, {1,3,5}, {1,4,4},
@@ -223,13 +184,28 @@ int main() {
 
     Graph graph(edges);
 
-    graph.printAirportNetwork();
-    graph.DFS(0);
-    graph.BFS(0);
-    graph.shortestPath(0);
+    int choice = -1;
+    while (choice != 0) {
+        cout << "\nAirport Network Menu:\n";
+        cout << "[1] Display airport network\n";
+        cout << "[2] DFS\n";
+        cout << "[3] BFS\n";
+        cout << "[4] Shortest paths\n";
+        cout << "[5] Minimum Spanning Tree\n";
+        cout << "[0] Exit\n";
+        cout << "Choice: ";
+        cin >> choice;
 
-    // ---- STEP 5 ----
-    graph.minimumSpanningTree();
+        switch (choice) {
+            case 1: graph.printAirportNetwork(); break;
+            case 2: graph.DFS(0); break;
+            case 3: graph.BFS(0); break;
+            case 4: graph.shortestPath(0); break;
+            case 5: graph.minimumSpanningTree(); break;
+            case 0: break;
+            default: cout << "Invalid option.\n";
+        }
+    }
 
     return 0;
 }
